@@ -17,34 +17,29 @@ class DBSCAN:
         for potential_neighbour in range(len(X)):
             if self._euclid_dist(X[i], X[potential_neighbour]) <= self.eps:
                 neighbours.append(potential_neighbour)
-        return np.array(neighbours) # neighbours of current point
+        return np.array(neighbours)
     
     def _expand_cluster(self, X, i, neighbours, n_cluster):
-        # recursively expand cluster from core point
         for neighbour in neighbours:
-            # if point is unvisited (-1), add to current cluster
             if self.labels[neighbour] == -1:
                 self.labels[neighbour] = n_cluster
                 new_neighbours = self._find_neighbours(X, neighbour)
                 if len(new_neighbours) >= self.min_samples:
                     self._expand_cluster(X, neighbour, new_neighbours, n_cluster)
-            # if point was marked as noise ( == 0), add to current cluster
             elif self.labels[neighbour] == 0:
                 self.labels[neighbour] = n_cluster
                 
     def fit(self, X):
         X = np.array(X)
         self.labels = np.full(len(X), -1)
-        n_cluster = 0 # current cluster id
+        n_cluster = 0
         for i in tqdm(range(len(X)), desc="Clustering in progress"):
-            # skip visited points
             if self.labels[i] != -1:
                 continue
             neighbours = self._find_neighbours(X, i)
             if len(neighbours) < self.min_samples:
                 self.labels[i] = 0
                 continue
-            # start new cluster
             n_cluster += 1
             self.labels[i] = n_cluster
             self._expand_cluster(X, i, neighbours, n_cluster)
